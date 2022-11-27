@@ -1,12 +1,7 @@
-<div align="center">
-<img src="https://rishavanand.github.io/static/images/greetings.gif" align="center" style="width: 100%" />
-</div>  
-  
-
 ### <div align="center">I'm Ahmed Elbadawy, a C, C++, x86asm, and Qt developer 👨‍💻</div>  
   
 
-- **since I started using C++ and I never looked back to use any other programming language**  
+- **since I started using C++, I never looked back to use any other programming language**  
   
 
 <div align="center">  
