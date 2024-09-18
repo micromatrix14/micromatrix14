@@ -1,7 +1,5 @@
 ### <div align="center">I'm Ahmed Elbadawy, a C, C++, x86 ASM, and Qt developer 👨‍💻</div>  
   
-
-- **since I started using C++, I never looked back to use any other programming language**  
   
 
 <div align="center">  
