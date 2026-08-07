@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>Agent Skill Structure</title><style>
+:root{--bg:#0b1220;--panel:#16233c;--panel2:#1d2f4d;--ink:#eaf1fb;--muted:#a9bcd8;--accent:#3d8bff;--green:#37d0a8;--yellow:#facd1b;--orange:#ff6c00;--purple:#c48bff;--line:#2c3f60}
+*{box-sizing:border-box}
+body{margin:0;background:#060b16;color:var(--ink);font-family:"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:1100px;margin:0 auto;padding:28px}
+h1{font-size:30px;margin:0 0 4px}
+h2{font-size:22px;color:#fff;border-bottom:2px solid var(--accent);padding-bottom:8px;margin:32px 0 14px}
+.kick{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:2px;font-size:12px}
+p,li{font-size:15px}.muted{color:var(--muted)}
+code,.mono{font-family:Consolas,monospace;background:#0b1526;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px;color:#cfe0ff}
+pre{background:#0b1526;border:1px solid var(--line);border-radius:10px;padding:18px;overflow:auto;font-family:Consolas,monospace;font-size:13.5px;color:#cfe0ff;line-height:1.55}
+.tree .c{color:var(--accent)}.tree .g{color:var(--green)}.tree .y{color:var(--yellow)}.tree .p{color:var(--purple)}.tree .m{color:var(--muted)}
+table{border-collapse:collapse;width:100%;margin:12px 0;font-size:13.5px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:#0b1526;color:#fff}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap;border:1px solid var(--line)}
+.generic{background:#12203a;color:#8fc0ff;border-color:#345}
+.sw{background:#123b28;color:#4ee39a;border-color:#2e7d52}
+.stub{background:#2c2340;color:#c48bff;border-color:#5a3e8a}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0}
+.foot{color:var(--muted);font-size:12px;margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+</style></head><body><div class="wrap">
+
+<div class="kick">tool_dev_ai_hub · agent brain</div>
+<h1>Skill structure &amp; hierarchy</h1>
+<p class="muted">How the agent's knowledge is organized so multiple teams (SW / FW / systems) can share one brain. Read top to bottom: <b>generic method → your discipline's pack → the specific repo</b>. This document reflects the real tree as it stands today.</p>
+
+<div class="legend">
+<span class="pill generic">GENERIC — any discipline</span>
+<span class="pill sw">SW — FaraStar software (Gen + TxM)</span>
+<span class="pill stub">STUB — FW / systems fill later</span>
+</div>
+
+<h2>The tree</h2>
+<pre class="tree">
+tool_dev_ai_hub/
+├── <span class="c">core/</span>                         <span class="m"># GENERIC — no repo names, no skills</span>
+│   ├── AGENT.md                  <span class="m"># the method + A/B/C triage classes</span>
+│   ├── guidelines/               <span class="m"># process rules (when-stuck, working-with-the-user)</span>
+│   └── templates/                <span class="m"># bug-report template</span>
+│
+├── <span class="c">agents/</span>                       <span class="m"># GENERIC — the roles, reusable by any discipline</span>
+│   ├── bug-fixer.md   code-reviewer.md   ui-developer.md
+│   └── jira.md        jama-requirements.md
+│
+└── <span class="c">domains/</span>                      <span class="m"># DISCIPLINE packs — one per team</span>
+    ├── <span class="g">sw/</span>                       <span class="m"># SW discipline: FaraStar Generator + TxM</span>
+    │   ├── PROFILE.md            <span class="m"># repos, branch, build/test, subsystems, skill list</span>
+    │   └── skills/               <span class="m"># 13 SW skills (see tables below)</span>
+    │       ├── triage-bug/                     <span class="m"># front door</span>
+    │       ├── cross-repo-sync-check/          <span class="m"># FaraStar-specific</span>
+    │       ├── fw-origin-status/               <span class="m"># FaraStar-specific</span>
+    │       ├── single-slot-overwrite/          <span class="m"># FaraStar-specific</span>
+    │       ├── debug-sim-button/               <span class="m"># FaraStar-specific</span>
+    │       ├── missing-reset-on-event/         <span class="m"># Qt/QML archetype</span>
+    │       ├── qml-layout-overflow/            <span class="m"># Qt/QML archetype</span>
+    │       ├── qml-lifecycle-trigger/          <span class="m"># Qt/QML archetype</span>
+    │       ├── first-tick-enumeration-race/    <span class="m"># polling archetype</span>
+    │       ├── intermittent-timing/            <span class="m"># timing/race archetype</span>
+    │       ├── thread-unsafe-singleton/        <span class="m"># C++ / Klocwork</span>
+    │       ├── qsharedpointer-foreign-ownership/ <span class="m"># C++ / Klocwork</span>
+    │       └── asset-blocked/                  <span class="m"># hand-back archetype</span>
+    │
+    ├── <span class="p">fw/</span>                       <span class="m"># STUB — firmware team adds PROFILE.md + skills/</span>
+    │   └── README.md
+    └── <span class="p">systems/</span>                  <span class="m"># STUB — systems team adds PROFILE.md + skills/</span>
+        └── README.md
+
+<span class="m"># memory of one codebase lives in each product repo, not here:</span>
+cap_software_gui/.claude/  ,  cap_software_rx_gui/.claude/
+    ├── architecture/   <span class="m"># how the code is wired</span>
+    ├── history.md      <span class="m"># reusable lessons</span>
+    └── (CLAUDE.md at repo root)  <span class="m"># build/test facts, points back to core + sw</span>
+</pre>
+
+<h2>The three layers</h2>
+<table>
+<tr><th style="width:16%">Layer</th><th style="width:14%">Scope</th><th>What lives there / why</th></tr>
+<tr><td><span class="mono">core/</span> + <span class="mono">agents/</span></td><td><span class="pill generic">GENERIC</span></td><td>The method (how to fix a bug trustworthily), the A/B/C triage classes, process guidelines, and the roles. Names no repo, holds no skills. Every discipline shares this untouched.</td></tr>
+<tr><td><span class="mono">domains/&lt;discipline&gt;/</span></td><td><span class="pill sw">SW</span> <span class="pill stub">FW/sys</span></td><td>One pack per discipline: a <span class="mono">PROFILE.md</span> (its repos, branch, build/test, subsystems, reference docs) + its own <span class="mono">skills/</span>. SW is filled in today; FW and systems are stubs in the same shape.</td></tr>
+<tr><td>repo <span class="mono">.claude/</span></td><td class="muted">per repo</td><td>Memory of one codebase: architecture maps, history, and the repo's <span class="mono">CLAUDE.md</span> build facts. Specific to that repo only.</td></tr>
+</table>
+<p class="muted">Key idea: nothing product- or language-specific leaks up into <span class="mono">core/</span>. A skill that names Gen↔TxM or QML belongs in <span class="mono">domains/sw/</span>. When FW joins, they add <span class="mono">domains/fw/</span> and reuse the same method &amp; roles.</p>
+
+<h2>The 13 SW skills — what each is, and how specific it is</h2>
+<p class="muted">All 13 live in <span class="mono">domains/sw/skills/</span>, so all are "SW discipline". The <b>right column</b> says how portable the <i>shape</i> is: a <b>FaraStar-specific</b> skill encodes this product's structure (Gen↔TxM CAN, the therapy popup slot); a <b>Qt/C++ generic-shape</b> skill would help any Qt project and is the kind of thing FW/systems could adapt.</p>
+
+<h3 style="color:var(--yellow)">Front door — runs first on every bug</h3>
+<table>
+<tr><th style="width:22%">Skill</th><th style="width:56%">What it does</th><th style="width:22%">Shape</th></tr>
+<tr><td><b>triage-bug</b></td><td>Maps the bug to the right repo (by which screen renders it), classifies <b>A</b> desk-verifiable / <b>B</b> needs bench proof / <b>C</b> blocked, and pins the failure to a <span class="mono">file:line</span> before any edit.</td><td>FaraStar-specific <span class="muted">(names Gen/TxM, subsystems)</span></td></tr>
+</table>
+
+<h3 style="color:var(--purple)">FaraStar-specific — encode this product's structure</h3>
+<table>
+<tr><th style="width:22%">Skill</th><th style="width:56%">What it does · real tickets</th><th style="width:22%">Shape</th></tr>
+<tr><td>cross-repo-sync-check</td><td>A value sent over CAN by one side, displayed by the other. Forces fixing all consumers (meaning, display, wire) in <b>both</b> repos. <span class="muted">FRP-4365.</span></td><td>FaraStar-specific</td></tr>
+<tr><td>fw-origin-status</td><td>On-screen status is wrong but SW only renders a firmware value → prove ownership, route to FW, don't mask. <span class="muted">FRP-5286, FRP-5287.</span></td><td>FaraStar-specific</td></tr>
+<tr><td>single-slot-overwrite</td><td>Generator therapy screen has one popup slot with no priority; setters overwrite, dismiss clears the wrong one. <span class="muted">FRP-3241, 5133, 4829, 4974, 1658.</span></td><td>FaraStar-specific <span class="muted">(safety)</span></td></tr>
+<tr><td>debug-sim-button</td><td>Temporary generator button that fires a ticket's repro in one click (injects CAN / calls C++ entry points). Removed before merge.</td><td>FaraStar-specific</td></tr>
+</table>
+
+<h3 style="color:var(--green)">Bug archetypes — generic Qt/C++ shapes (SW-owned today)</h3>
+<table>
+<tr><th style="width:24%">Skill</th><th style="width:54%">What it does · real tickets</th><th style="width:22%">Shape</th></tr>
+<tr><td>missing-reset-on-event</td><td>State persists (or resets) wrongly across a lifecycle event; fix = add/remove a reset in the handler. <span class="muted">FRP-5288, 5299, 5351.</span></td><td>Qt-generic shape</td></tr>
+<tr><td>qml-layout-overflow</td><td>UI overlaps/clips/vanishes — visual, get the frame first, confirm on-device (Class B). <span class="muted">FRP-4164, 5086, 4816, 5349.</span></td><td>QML-generic shape</td></tr>
+<tr><td>qml-lifecycle-trigger</td><td>One-time setup fires at construction (StackLayout/StackView eager build) instead of on navigation.</td><td>QML-generic shape</td></tr>
+<tr><td>first-tick-enumeration-race</td><td>Status briefly wrong after connect/power-on, self-corrects a tick later; act on the settled poll.</td><td>Polling-generic shape</td></tr>
+<tr><td>intermittent-timing</td><td>"Sometimes"/crash/race — needs a trace, never shipped as a confident Class A. <span class="muted">FRP-4653, 4955, 3218, 5131.</span></td><td>Generic shape</td></tr>
+<tr><td>thread-unsafe-singleton</td><td>Racy lazy <span class="mono">Instance()</span> — two threads both construct. Mechanical Klocwork fix. <span class="muted">FRP-5408/5409.</span></td><td>C++-generic shape</td></tr>
+<tr><td>qsharedpointer-foreign-ownership</td><td>Smart pointer over a non-owned raw pointer → double-free. <span class="muted">FRP-5408, 5411.</span></td><td>C++-generic shape</td></tr>
+<tr><td>asset-blocked</td><td>Fix needs an artifact (SVG text, .wav, DB row) the agent can't author → hand back (Class C). <span class="muted">FRP-5088, 5147, 4900.</span></td><td>Generic shape</td></tr>
+</table>
+<p class="muted">"Generic shape" skills sit in <span class="mono">domains/sw/</span> today because SW is the only filled discipline. If a second Qt discipline appeared, the truly product-neutral ones (singleton, shared-pointer, layout, timing) are the candidates to generalize — but until then, one owner keeps it simple.</p>
+
+<h2>How FW &amp; systems plug in</h2>
+<p class="muted">They never edit <span class="mono">core/</span> or <span class="mono">domains/sw/</span>. Each adds its own pack in the identical shape:</p>
+<pre class="tree">
+domains/<span class="p">fw/</span>
+  PROFILE.md   <span class="m"># FW repos, integration branch, build/flash, subsystem map</span>
+  skills/      <span class="m"># FW archetypes (e.g. ISR timing, register-init order, CAN framing)</span>
+domains/<span class="p">systems/</span>
+  PROFILE.md   <span class="m"># systems repos/tools, requirement sources (JAMA), trace/report locations</span>
+  skills/      <span class="m"># systems archetypes (e.g. requirement-traceability, hazard review)</span>
+</pre>
+<p class="muted">They inherit the shared method (<span class="mono">core/AGENT.md</span>), roles (<span class="mono">agents/</span>), and contribution rules (<span class="mono">CONTRIBUTING.md</span>) for free.</p>
+
+<div class="foot">Reflects the real tree in <span class="mono">tool_dev_ai_hub</span>. Skill bodies follow a fixed shape: Recognize → Locate → Confirm mechanism → Fix pattern → Verify. Open in a browser, or Print → Save as PDF to share.</div>
+</div></body></html>

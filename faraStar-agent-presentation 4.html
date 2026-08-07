@@ -1,0 +1,347 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<title>FaraStar AI Bug-Fix Agent — Dev Talk</title><style>
+:root{--bg:#0b1220;--panel:#16233c;--panel2:#1d2f4d;--ink:#eaf1fb;--muted:#a9bcd8;--accent:#3d8bff;--green:#37d0a8;--yellow:#facd1b;--orange:#ff6c00;--purple:#c48bff;--line:#2c3f60}
+*{box-sizing:border-box}
+body{margin:0;background:#060b16;color:var(--ink);font-family:"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5}
+.deck{max-width:1150px;margin:0 auto;padding:24px}
+.slide{background:linear-gradient(160deg,var(--panel),#101d33);border:1px solid var(--line);border-radius:14px;padding:38px 46px;margin:0 0 24px;box-shadow:0 10px 30px rgba(0,0,0,.35);page-break-after:always}
+h1{font-size:34px;margin:0 0 6px}h2{font-size:25px;color:#fff;border-bottom:2px solid var(--accent);padding-bottom:10px;margin:0 0 18px}
+h3{font-size:17px;color:var(--green);margin:20px 0 8px}
+.kick{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:2px;font-size:13px}
+p,li{font-size:16px}.muted{color:var(--muted)}
+ul{margin:8px 0;padding-left:22px}li{margin:5px 0}
+code,.mono{font-family:Consolas,monospace;background:#0b1526;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:14px;color:#cfe0ff}
+pre{background:#0b1526;border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto;font-family:Consolas,monospace;font-size:13.5px;color:#cfe0ff}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:16px 18px}
+.card h4{margin:0 0 8px;color:#fff;font-size:16px}
+.can{color:var(--green);font-weight:700}.cant{color:var(--orange);font-weight:700}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:#0b1526;color:#fff}
+.flow{font-family:Consolas,monospace;font-size:13px;white-space:pre;color:#cfe0ff;background:#0b1526;border:1px solid var(--line);border-radius:10px;padding:18px}
+.pill{display:inline-block;border-radius:999px;padding:3px 12px;font-size:13px;border:1px solid var(--line);margin:2px}
+.tA{border-color:var(--green);color:#bff0e0}.tB{border-color:var(--yellow);color:#ffe9a3}.tC{border-color:var(--orange);color:#ffc9a3}
+.foot{color:var(--muted);font-size:12px;margin-top:16px;border-top:1px solid var(--line);padding-top:10px}
+svg.d{width:100%;height:auto;background:#0b1526;border:1px solid var(--line);border-radius:10px}
+svg.d text{font-family:"Segoe UI",Arial;fill:#eaf1fb}
+</style></head><body><div class="deck">
+
+<section class="slide">
+<div class="kick">FaraStar Software · AI Tooling</div>
+<h1>The Bug-Fixing Agent</h1>
+<p class="muted" style="font-size:20px">An AI teammate that turns a Jira key into a reviewed, buildable pull request — using our real requirements, our code, and our review discipline.</p>
+<div class="grid3" style="margin-top:24px">
+<div class="card"><h4>What it is</h4><p class="muted">A Claude Code agent with a shared method + skills, per-repo memory, and live links to Jira / Bitbucket / JAMA / Figma.</p></div>
+<div class="card"><h4>Why</h4><p class="muted">Consistent triage, honest verification, no silent guessing on safety-critical code. Sorts the backlog and fixes what's safely fixable.</p></div>
+<div class="card"><h4>Where it runs</h4><p class="muted">In VS Code, on your machine, against your fork. Nothing merges without human review.</p></div>
+</div>
+<div class="foot">Generator repo <span class="mono">cap_software_gui</span> · TxM repo <span class="mono">cap_software_rx_gui</span> · Brain <span class="mono">tool_dev_ai_hub</span></div>
+</section>
+
+<section class="slide">
+<div class="kick">Honest scope</div>
+<h2>What it can and cannot do</h2>
+<div class="grid2">
+<div>
+<h3 class="can">Does well</h3>
+<ul>
+<li>Read a Jira ticket, <b>all</b> comments, and attachments (images, CAN/serial logs)</li>
+<li>Pull the linked <b>JAMA requirement</b> and <b>Figma</b> mockup</li>
+<li><b>View screenshots / mockups</b> — see the real symptom and intended design</li>
+<li><b>Decode CAN / serial traces</b> against the protocol spec</li>
+<li>Triage a bug and name the failure at <span class="mono">file:line</span></li>
+<li>Write the <b>minimal fix</b>, <b>build</b>, and <b>run unit tests</b></li>
+<li>Add a <b>debug button</b> that injects CAN messages to reproduce a bug on-device</li>
+<li>Open a <b>cross-fork PR</b> with the ticket text + fix write-up; sort/label the whole backlog</li>
+</ul>
+</div>
+<div>
+<h3 class="cant">Cannot / hands back</h3>
+<ul>
+<li><b>Cannot read video</b> — needs key frames as screenshots</li>
+<li><b>Cannot render QML</b> — a UI/layout fix is reasoned, not seen; needs a human visual check</li>
+<li><b>Cannot run on real hardware</b> — bench/CAN verification is yours</li>
+<li>Blocked bugs (missing asset, firmware-origin, needs a trace) → <b>root-cause write-up, not a fake fix</b></li>
+<li>Won't weaken a <b>safety guard</b> without sign-off</li>
+<li>Never does the <b>merge</b> — the PR is a draft for review</li>
+</ul>
+</div>
+</div>
+</section>
+
+<section class="slide">
+<div class="kick">How it works</div>
+<h2>The pipeline (Jira key &rarr; reviewed PR)</h2>
+<svg class="d" viewBox="0 0 1080 470" role="img" aria-label="pipeline">
+<defs><marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#7fa8e6"/></marker></defs>
+<g stroke="#7fa8e6" stroke-width="2" fill="none" marker-end="url(#a)">
+<path d="M160,58 L160,84"/>
+<path d="M160,138 L160,164"/>
+<path d="M160,218 L160,244"/>
+<path d="M270,276 L326,276 L326,150 L360,150"/>
+<path d="M270,276 L326,276 L326,404 L360,404"/>
+<path d="M600,150 L646,150"/>
+<path d="M886,176 L886,300 L840,300"/>
+</g>
+<g>
+<rect x="50" y="22" width="220" height="36" rx="8" fill="#1d2f4d" stroke="#3d8bff"/><text x="160" y="45" text-anchor="middle" font-size="15" font-weight="700">"Fix FRP-1234"</text>
+<rect x="40" y="84" width="240" height="54" rx="8" fill="#16233c" stroke="#2c3f60"/><text x="160" y="106" text-anchor="middle" font-size="13">1 · Read brain + repo memory</text><text x="160" y="125" text-anchor="middle" font-size="11" fill="#a9bcd8">AGENT.md · PROFILE.md · skills · CLAUDE.md</text>
+<rect x="40" y="164" width="240" height="54" rx="8" fill="#16233c" stroke="#2c3f60"/><text x="160" y="186" text-anchor="middle" font-size="13">2 · Get context</text><text x="160" y="205" text-anchor="middle" font-size="11" fill="#a9bcd8">Jira + comments + attach · JAMA · Figma</text>
+<polygon points="160,244 270,276 160,308 50,276" fill="#243247" stroke="#facd1b" stroke-width="2"/><text x="160" y="272" text-anchor="middle" font-size="13" font-weight="700">3 · TRIAGE</text><text x="160" y="290" text-anchor="middle" font-size="11" fill="#a9bcd8">A / B / C @ file:line</text>
+
+<rect x="360" y="124" width="240" height="52" rx="8" fill="#16233c" stroke="#37d0a8"/><text x="480" y="146" text-anchor="middle" font-size="13" font-weight="700">4 · Fix + build + tests</text><text x="480" y="164" text-anchor="middle" font-size="11" fill="#a9bcd8">A: ship · B: propose fix · minimal change</text>
+
+<rect x="360" y="378" width="240" height="52" rx="8" fill="#2a1c14" stroke="#ff6c00"/><text x="480" y="400" text-anchor="middle" font-size="13" font-weight="700" fill="#ffc9a3">Category C &rarr; hand back</text><text x="480" y="418" text-anchor="middle" font-size="11" fill="#a9bcd8">root cause + what's needed, no fake fix</text>
+
+<rect x="646" y="112" width="240" height="76" rx="8" fill="#2c2340" stroke="#c48bff" stroke-width="2"/><text x="766" y="134" text-anchor="middle" font-size="13" font-weight="700" fill="#dcc4ff">5 · REVIEW (you)</text><text x="766" y="153" text-anchor="middle" font-size="11" fill="#a9bcd8">"explain the mechanism" · challenge it</text><text x="766" y="171" text-anchor="middle" font-size="11" fill="#a9bcd8">wrong? → send comments back to fix</text>
+
+<path d="M646,175 L480,175 L480,182" stroke="#c48bff" stroke-width="2" fill="none" marker-end="url(#a)" stroke-dasharray="5 4"/>
+
+<rect x="600" y="262" width="240" height="76" rx="8" fill="#132a22" stroke="#37d0a8" stroke-width="2"/><text x="720" y="286" text-anchor="middle" font-size="13" font-weight="700" fill="#bff0e0">6 · SHIP as AI-DRAFT PR</text><text x="720" y="305" text-anchor="middle" font-size="11" fill="#cfe0ff">cross-fork PR · Jira In Progress · assign you</text><text x="720" y="323" text-anchor="middle" font-size="11" fill="#facd1b">→ human review &amp; merge</text>
+</g>
+</svg>
+<p class="muted" style="margin-top:10px"><b>Three lanes out of triage:</b> <span class="pill tA">A</span> confident fix &rarr; ship · <span class="pill tB">B</span> a <b>proposed</b> fix that still needs bench verification (shipped, but flagged) · <span class="pill tC">C</span> blocked &rarr; handed back with root cause, never a fake fix. <b>Review</b> today is you: ask it to <i>explain the mechanism</i> before it edits — the more you push on the "why", the more often a wrong guess is caught.</p>
+</section>
+
+<section class="slide">
+<div class="kick">Structure</div>
+<h2>How the brain is organized — 3 layers, read in order</h2>
+<p class="muted">One shared brain, split so multiple teams can share it. The agent reads <b>generic method → your discipline's pack → the specific repo</b>, each narrowing to more specifics.</p>
+<div class="grid3" style="margin-top:14px">
+<div class="card"><h4 style="color:#3d8bff">1 · core/ <span class="muted" style="font-weight:400">— generic</span></h4><p class="muted" style="font-size:14px">Discipline-agnostic. No repo names, no skills.</p><ul class="muted" style="font-size:13.5px"><li><span class="mono">AGENT.md</span> — the method + A/B/C</li><li><span class="mono">guidelines/</span> · <span class="mono">templates/</span></li><li><span class="mono">agents/</span> — the roles (bug-fixer, reviewer, jira, jama, ui)</li></ul></div>
+<div class="card"><h4 style="color:#37d0a8">2 · domains/&lt;discipline&gt;/</h4><p class="muted" style="font-size:14px">One pack per team.</p><ul class="muted" style="font-size:13.5px"><li><span class="mono">sw/</span> — FaraStar SW (Gen + TxM): PROFILE + 13 skills</li><li><span class="mono">fw/</span> · <span class="mono">systems/</span> — stubs those teams fill in the same shape</li></ul></div>
+<div class="card"><h4 style="color:#c48bff">3 · repo <span class="mono" style="font-size:12px">.claude/</span></h4><p class="muted" style="font-size:14px">Memory of one codebase.</p><ul class="muted" style="font-size:13.5px"><li><span class="mono">architecture/</span> — how the code is wired</li><li><span class="mono">history.md</span> — reusable lessons</li><li><span class="mono">CLAUDE.md</span> — build/test facts</li></ul></div>
+</div>
+<div class="foot">FW &amp; systems don't touch <span class="mono">core/</span> or <span class="mono">sw/</span> — they add their own <span class="mono">domains/fw/</span>, <span class="mono">domains/systems/</span>. Everyone shares the same method &amp; roles.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Skills 1/4 · front door + FaraStar-specific</div>
+<h2>What each skill actually does <span class="muted" style="font-size:15px;font-weight:400">— domains/sw/skills/</span></h2>
+<p class="muted">A skill is a written playbook for one bug shape: how to <b>recognize</b> it, where to <b>look</b>, how to <b>prove</b> the mechanism, and the <b>fix pattern</b> — each carrying the real tickets it was distilled from.</p>
+<table style="font-size:13px">
+<tr><th style="width:20%">Skill</th><th style="width:52%">Symptom → mechanism → what it does</th><th style="width:28%">Real tickets</th></tr>
+<tr><td><b>triage-bug</b><br><span class="muted">runs first, always</span></td><td>Before any edit: map the bug to the right repo (by <i>which screen renders it</i>, not which device the tester names), classify <span class="pill tA">A</span> desk-verifiable / <span class="pill tB">B</span> needs bench proof / <span class="pill tC">C</span> blocked, and pin the failure to a <span class="mono">file:line</span>. Stops confident-but-wrong fixes.</td><td class="muted">every bug</td></tr>
+<tr><td>cross-repo-sync-check<br><span class="muted">Gen↔TxM</span></td><td>A value sent over CAN by one side and displayed by the other. Fixing only your side silently desyncs the other. Forces you to find the wire contract (CAN doc) + <b>all three</b> consumers: meaning, display, send/receive — in <b>both</b> repos.</td><td class="muted">FRP-4365 (voiceover enum needed 4 spots: Gen enum+icon, TxM enum+icon)</td></tr>
+<tr><td>fw-origin-status<br><span class="muted">don't mask FW</span></td><td>On-screen status is wrong, but SW only renders a value <b>firmware</b> sent. Proves ownership: if the only path that sets the value is the FW message, it's a FW bug → route there with the violated requirement + ask for a CAN trace. No SW override that hides it.</td><td class="muted">FRP-5286 (PAD2 flashes green), FRP-5287 (pad grey not red)</td></tr>
+<tr><td>single-slot-overwrite<br><span class="muted">safety</span></td><td>Generator therapy screen has <b>one</b> popup slot with no priority — setters overwrite unconditionally, so a dismiss clears whatever's showing. Mirror the existing E-stop guard instead of inventing new logic.</td><td class="muted">FRP-3241, FRP-5133, FRP-4829, FRP-4974, FRP-1658</td></tr>
+<tr><td>debug-sim-button<br><span class="muted">on-device repro</span></td><td>A temporary generator button that fires a ticket's "Steps to Recreate" in one click (injects the CAN messages / calls the C++ entry points), so a fix can be validated on the device without the full hardware sequence. Separate commit, always removed before merge.</td><td class="muted">any hard-to-trigger flow</td></tr>
+</table>
+<div class="foot">These four encode FaraStar structure (the Gen↔TxM CAN split, the shared popup slot, the generator test-button). The next slides are the generic bug archetypes.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Skills 2/4 · state &amp; UI archetypes</div>
+<h2>Bug archetypes — state &amp; QML</h2>
+<table style="font-size:13px">
+<tr><th style="width:22%">Skill</th><th style="width:50%">Symptom → mechanism → fix</th><th style="width:28%">Real tickets</th></tr>
+<tr><td>missing-reset-on-event<br><span class="pill tA">usually A</span></td><td>"X stays after Y" / "settings kept in memory" / "stale value after returning". A member isn't cleared on a lifecycle event (generator/catheter disconnect, end-procedure, screen exit/entry) — or is cleared when it should persist. Fix = add or remove a reset in that event handler.</td><td class="muted">FRP-5288 (banner reset on disconnect → remove), FRP-5299 (summary mode → add setTagMode), FRP-5351</td></tr>
+<tr><td>qml-layout-overflow<br><span class="pill tB">B — needs a frame</span></td><td>"overlap / cut off / stranded / disappears on press / overflows". Purely <b>visual</b> — code can suggest a cause but can't confirm it. The recurring mistake is theorizing from code and fixing the wrong thing. <b>Get the screenshot frame first</b>, then confirm on-device.</td><td class="muted">FRP-4164 (label overlap), FRP-5086, FRP-4816, FRP-5349</td></tr>
+<tr><td>qml-lifecycle-trigger</td><td>"X is already set even though I never opened that screen." One-time setup runs when QML <b>constructs</b> the component (app launch, every tab) instead of on navigation. Root cause: <span class="mono">Component.onCompleted</span> fires eagerly for all children of a StackLayout/StackView. Gate on the page actually becoming current.</td><td class="muted">early-default / wrong-tab bugs</td></tr>
+<tr><td>first-tick-enumeration-race</td><td>Status briefly wrong right after connect/power-on/replug, then self-corrects a tick later — worse when many devices connect at once. The first poll reads an incomplete state and the code acts on it. Fix = wait for the settled enumeration before reacting.</td><td class="muted">transient connect errors / flapping status</td></tr>
+</table>
+<div class="foot">These are QML/Qt-generic — they'd apply to any Qt project, which is why FW/systems can reuse the same shapes.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Skills 3/4 · timing, static-analysis, assets</div>
+<h2>Bug archetypes — races &amp; mechanical findings</h2>
+<table style="font-size:13px">
+<tr><th style="width:24%">Skill</th><th style="width:48%">Symptom → mechanism → fix</th><th style="width:28%">Real tickets</th></tr>
+<tr><td>intermittent-timing<br><span class="pill tC">never ship as A</span></td><td>"sometimes / occasionally / seen 2 of 3 / black screen / crash", or a glitch only when two actions coincide. Reading code can suggest a cause but never confirm it — needs a trace/repro. The rule: <b>do not present a guessed fix as confident</b>, especially on a safety path.</td><td class="muted">FRP-4653 (crash after many footswitch ablations), FRP-4955, FRP-3218, FRP-5131</td></tr>
+<tr><td>thread-unsafe-singleton<br><span class="muted">Klocwork</span></td><td>Lazy <span class="mono">if(!m_instance) m_instance=new T</span> accessor — two threads both see null, both construct, one leaks and state splits. Mechanical fix to the well-known safe-init pattern.</td><td class="muted">FRP-5408/5409 backlog</td></tr>
+<tr><td>qsharedpointer-foreign-ownership<br><span class="muted">Klocwork</span></td><td>A <span class="mono">QSharedPointer</span> built from a raw pointer the code doesn't own (address of a reference, a singleton's <span class="mono">resolve()</span>, a member). Refcount hits zero → it <span class="mono">delete</span>s memory it never allocated → double-free/crash. Fix = don't take ownership (raw ref, or non-deleting deleter).</td><td class="muted">FRP-5408 (&amp;getHandler()), FRP-5411 (resolve())</td></tr>
+<tr><td>asset-blocked<br><span class="pill tC">hands back</span></td><td>Looks like code but the fix is an <b>artifact</b> the agent can't author: text baked into an SVG as vector paths, a missing <span class="mono">.wav</span>, or a missing message-DB row showing as "Unknown Warning". Recognize fast, hand back exactly what's needed — no no-op "fix".</td><td class="muted">FRP-5088 ("Software" in SVG), FRP-5147 (no beep .wav), FRP-4900 (DB seed)</td></tr>
+</table>
+<div class="foot">Class shown as a chip where the skill forces it: intermittent = never confident-A; asset-blocked = always C.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Skills 4/4 · how &amp; where to contribute</div>
+<h2>Grow the agent — after every fix, ask "what generalizes?"</h2>
+<p class="muted">The agent gets smarter only if the lesson is written down in the right layer. Two minutes after a confirmed fix: decide what would help the <i>next</i> similar bug, and put it where the agent will read it.</p>
+<table style="font-size:13.5px">
+<tr><th style="width:42%">If the fix revealed…</th><th style="width:28%">Add / update</th><th style="width:30%">Where</th></tr>
+<tr><td>A reusable <b>bug pattern</b> (any archetype)</td><td>a new <b>skill</b></td><td><span class="mono">domains/sw/skills/&lt;name&gt;/SKILL.md</span></td></tr>
+<tr><td>A known playbook that <b>missed a step</b></td><td>edit that <b>skill</b></td><td>the existing <span class="mono">SKILL.md</span></td></tr>
+<tr><td>A <b>process</b> failure (spun, guessed, mis-framed)</td><td>a <b>guideline</b></td><td><span class="mono">core/guidelines/</span></td></tr>
+<tr><td>A durable <b>discipline fact</b> (branch, build, subsystem)</td><td>the <b>profile</b></td><td><span class="mono">domains/sw/PROFILE.md</span></td></tr>
+<tr><td>Real <b>structure</b> you traced (layers, message flow)</td><td>the <b>architecture map</b></td><td>the repo's <span class="mono">.claude/architecture/</span></td></tr>
+<tr><td>A one-off <b>build fact</b> for a repo</td><td>the repo's</td><td><span class="mono">CLAUDE.md</span></td></tr>
+</table>
+<div class="grid2" style="margin-top:14px">
+<div class="card"><h4 style="color:#37d0a8">How to write a skill</h4><ul class="muted" style="font-size:13.5px">
+<li>Front-matter <span class="mono">name</span> + <span class="mono">description</span> that says <i>when to use it</i> (the symptom wording the agent matches on)</li>
+<li>Body follows the fixed shape: <b>Recognize → Locate → Confirm mechanism → Fix pattern → Verify</b></li>
+<li>Cross-link related skills with <span class="mono">[[name]]</span></li>
+</ul></div>
+<div class="card"><h4 style="color:#facd1b">The one rule: shape, not specifics</h4><ul class="muted" style="font-size:13.5px">
+<li>✅ Record the reusable pattern ("state that persists across an event is usually a missing reset in the handler")</li>
+<li>❌ Never bake in <span class="mono">file:line</span>, enum values, or test counts — they rot; the agent re-derives them from live code</li>
+<li>Cite real FRP numbers only as brief "this happened" illustrations</li>
+</ul></div>
+</div>
+<div class="foot">FW &amp; systems contribute the same way into <span class="mono">domains/fw/</span> and <span class="mono">domains/systems/</span> — never editing <span class="mono">core/</span> or <span class="mono">sw/</span>. See <span class="mono">CONTRIBUTING.md</span>.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Roles</div>
+<h2>The agent roles</h2>
+<p class="muted">Same brain, different entry points. You pick one by how you phrase the request.</p>
+<table>
+<tr><th>Agent</th><th>Use it for</th><th>Say something like</th></tr>
+<tr><td><b>bug-fixer</b></td><td>Fix a Generator/TxM bug end to end</td><td>"Fix FRP-1234"</td></tr>
+<tr><td><b>code-reviewer</b></td><td>Review a PR against the ticket + requirement</td><td>"Review FRP-1234" / a PR URL</td></tr>
+<tr><td><b>jira</b></td><td>Fetch &amp; summarize a ticket</td><td>"Summarize FRP-1234"</td></tr>
+<tr><td><b>jama-requirements</b></td><td>Read a TxM requirement + traceability</td><td>"What does TXM-PrR-495 require?"</td></tr>
+<tr><td><b>ui-developer</b></td><td>Turn a Figma mockup into QML</td><td>"Build this Figma screen: &lt;url&gt;"</td></tr>
+</table>
+</section>
+
+<section class="slide">
+<div class="kick">Setup — do this once</div>
+<h2>Point the agent at YOUR machine</h2>
+<p class="muted">Everyone's folders differ. The agent needs to know where <b>your</b> repos, reference docs, and screenshots live. Set these before first use.</p>
+<div class="grid2">
+<div>
+<h3>1 · Install &amp; connect</h3>
+<ul>
+<li>Clone <span class="mono">tool_dev_ai_hub</span>; run <span class="mono">setup/Setup-Claude-Code.bat</span> (installs Claude Code + Bedrock)</li>
+<li>Fill your tokens in <span class="mono">secrets/*.env</span> (Jira / Bitbucket / JAMA / Figma) — your PAT + your BB_USER</li>
+</ul>
+<h3>2 · Repos — side by side</h3>
+<p class="muted">The domain profile expects the three repos in <b>one parent folder</b>. If yours live elsewhere, tell the agent your paths (or update <span class="mono">domains/farastar/PROFILE.md</span>):</p>
+<pre>&lt;your-projects&gt;/
+  ├── cap_software_gui/
+  ├── cap_software_rx_gui/
+  └── tool_dev_ai_hub/</pre>
+</div>
+<div>
+<h3>3 · Reference docs (CAN + error codes)</h3>
+<p class="muted">The agent reads the CAN protocol &amp; error-code specs from <b>your synced OneDrive</b> — not the repo. Confirm they exist at your path:</p>
+<pre>C:\Users\&lt;you&gt;\OneDrive - Boston Scientific\Documents\
+   FARASTAR CAN Protocol Architecture
+   TxM Commercial Error Codes</pre>
+<p class="muted">Missing? Open each once from SharePoint so OneDrive syncs a local copy.</p>
+<h3>4 · Screenshots &amp; logs</h3>
+<ul>
+<li>Ticket images: the agent downloads them itself</li>
+<li>Your own captures / CAN logs: <b>tell the agent the path</b> (e.g. your <span class="mono">…\Pictures\Screenshots</span>) — there is no hardcoded location</li>
+</ul>
+</div>
+</div>
+<div class="foot">If the agent can't find a repo, doc, or screenshot, it will say so — just give it the path. It never assumes a folder that isn't there.</div>
+</section>
+
+<section class="slide">
+<div class="kick">How to start it</div>
+<h2>What to type</h2>
+<p class="muted">Open the product repo (and <span class="mono">tool_dev_ai_hub</span>) in VS Code, run <span class="mono">claude</span> in a terminal, then use plain requests. The trigger words route to the right role.</p>
+<div class="grid2">
+<div class="card"><h4>Fix a bug</h4><pre>Fix FRP-1234</pre><p class="muted">Runs the full pipeline: context → triage → fix → build/test → reviewer → PR.</p></div>
+<div class="card"><h4>Investigate only (no code)</h4><pre>Investigate FRP-1234 — is it
+still reproducible? Don't fix,
+just tell me the mechanism.</pre></div>
+<div class="card"><h4>Review a PR</h4><pre>Review FRP-1234
+(or paste the Bitbucket PR URL)</pre></div>
+<div class="card"><h4>Triage / sort a backlog</h4><pre>Grade these tickets A/B/C and
+tell me which are safe to fix:
+FRP-1234, FRP-1235, …</pre></div>
+</div>
+<h3>Tips that make it work better</h3>
+<ul>
+<li><b>Give it the screenshot path</b> for visual bugs — it can't read video, only image frames.</li>
+<li><b>Point it at the CAN log</b> for comm/timing bugs.</li>
+<li>Ask it to <b>explain the mechanism first</b> if you want to sanity-check before it edits.</li>
+<li>It will <b>pause and ask</b> when a decision is genuinely yours (requirement unclear, safety guard, risky action).</li>
+</ul>
+<div class="foot">Golden path: a clear Jira key + any attached frames/logs → a reviewed AI-DRAFT PR you validate on the bench.</div>
+</section>
+
+<section class="slide">
+<div class="kick">Structure</div>
+<h2>How it's built — 3 repos &amp; where things live</h2>
+<p class="muted">The <b>brain</b> is one shared repo. Each <b>product repo</b> carries an identical <span class="mono">.claude/</span> flow plus its own build facts. You open the product repo (and the brain) in VS Code and run <span class="mono">claude</span>.</p>
+<div class="grid3" style="margin-top:14px">
+<div class="card"><h4 style="color:#3d8bff">tool_dev_ai_hub <span class="muted" style="font-weight:400">— the brain</span></h4><ul class="muted" style="font-size:13.5px">
+<li><span class="mono">core/AGENT.md</span> — the method</li>
+<li><span class="mono">core/skills/</span> — generic bug playbooks</li>
+<li><span class="mono">core/guidelines/</span> · <span class="mono">templates/</span></li>
+<li><span class="mono">domains/farastar/PROFILE.md</span> — repos, branch, build, subsystem map</li>
+<li><span class="mono">domains/farastar/skills/</span> — FaraStar-only playbooks</li>
+<li><span class="mono">agents/</span> — bug-fixer, code-reviewer, jira, jama, ui</li>
+<li><span class="mono">integrations/</span> — Jira · Bitbucket · JAMA · Figma · SharePoint</li>
+<li><span class="mono">secrets/*.env</span> — <b>your</b> tokens (never committed)</li>
+</ul></div>
+<div class="card"><h4 style="color:#37d0a8">cap_software_gui <span class="muted" style="font-weight:400">— Generator</span></h4><ul class="muted" style="font-size:13.5px">
+<li><span class="mono">.claude/</span> — same agent flow as TxM</li>
+<li><span class="mono">.claude/architecture/</span> — traced layers &amp; message flow</li>
+<li><span class="mono">.claude/history.md</span> — past fixes &amp; lessons</li>
+<li><span class="mono">CLAUDE.md</span> — this repo's build baseline &amp; commands</li>
+</ul></div>
+<div class="card"><h4 style="color:#37d0a8">cap_software_rx_gui <span class="muted" style="font-weight:400">— TxM</span></h4><ul class="muted" style="font-size:13.5px">
+<li><span class="mono">.claude/</span> — <b>identical</b> flow; only <span class="mono">CLAUDE.md</span> differs</li>
+<li>Keep both <span class="mono">.claude/</span> trees in sync — a <span class="mono">git diff</span> between them catches drift</li>
+<li>Connection scripts are <b>not</b> duplicated — they live in the brain</li>
+</ul></div>
+</div>
+<h3 style="margin-top:14px">How you contribute — after every bug, ask "what generalizes?"</h3>
+<table>
+<tr><th>If the fix revealed…</th><th>Add / update</th><th>Where</th></tr>
+<tr><td>A <b>generic</b> bug pattern (any Qt project)</td><td>a new skill</td><td><span class="mono">core/skills/&lt;name&gt;/SKILL.md</span></td></tr>
+<tr><td>A <b>FaraStar-only</b> pattern (Gen↔TxM, therapy popup…)</td><td>a new skill</td><td><span class="mono">domains/farastar/skills/&lt;name&gt;/SKILL.md</span></td></tr>
+<tr><td>A known playbook that <b>missed a step</b></td><td>edit that skill</td><td>the existing <span class="mono">SKILL.md</span></td></tr>
+<tr><td>A <b>process</b> failure (spun, guessed, mis-framed)</td><td>a guideline</td><td><span class="mono">core/guidelines/</span></td></tr>
+<tr><td>A durable <b>domain fact</b> (branch, build, subsystem)</td><td>the profile</td><td><span class="mono">domains/farastar/PROFILE.md</span></td></tr>
+</table>
+<div class="foot"><b>The one rule:</b> record the reusable <i>shape</i>, never <span class="mono">file:line</span>, enum values, or test counts — specifics rot; the agent re-derives them from current code. Improve a skill → copy it to the other repo's <span class="mono">.claude/</span> too.</div>
+</section>
+
+<section class="slide">
+<div class="kick">The pitch</div>
+<h2>What it does for you today</h2>
+<p class="muted">One AI teammate that takes a Jira key and does the whole loop — read, fix, build, test, PR — while you stay in control. Grouped by what it saves you:</p>
+<p class="muted" style="font-size:13px;margin-top:-4px">Each card lists the <b>built-in capability</b>. Lines in <span class="mono">mono</span> are <b>examples of what you'd type</b> — plain English, nothing hard-coded; branch names, counts and dates are yours to change.</p>
+<div class="grid3" style="margin-top:12px">
+<div class="card"><h4 style="color:#37d0a8">Fix a bug end-to-end</h4><ul class="muted" style="font-size:14px">
+<li>Runs the full loop from a ticket: branch off the current target branch, ask questions, commit, build, run tests, push the PR</li>
+<li>Works across <b>both</b> Generator + TxM repos when a fix spans them</li>
+<li>Squash / edit commits, add tests, cross-check build + test reports</li>
+<li class="mono" style="color:#8fb0e6">e.g. "work on FRP-1234 on develop_commercial"</li>
+</ul></div>
+<div class="card"><h4 style="color:#37d0a8">Understand the ticket</h4><ul class="muted" style="font-size:14px">
+<li>Reads the description, <b>all comments</b>, parses attachments, checks images</li>
+<li>Video? Give it screenshot frames — it reads them from your capture folder</li>
+<li>Reworks the fix when you point it at review comments</li>
+<li class="mono" style="color:#8fb0e6">e.g. "read the comments and address them"</li>
+</ul></div>
+<div class="card"><h4 style="color:#37d0a8">Work the backlog</h4><ul class="muted" style="font-size:14px">
+<li>Queries Jira and turns results into readable reports</li>
+<li>Reads git history to spot likely <b>duplicates</b> — you set the range</li>
+<li>Updates Jira fields — assignee, status</li>
+<li>Creates PRs: copies the Jira description + adds a <b>"Fix"</b> section</li>
+<li class="mono" style="color:#8fb0e6">e.g. "check last 2 months of commits — is this a dup?"</li>
+</ul></div>
+<div class="card"><h4 style="color:#c48bff">Report &amp; share</h4><ul class="muted" style="font-size:14px">
+<li>Builds <b>HTML status reports</b> and <b>presentations</b> from a chat</li>
+<li>Turns pasted Teams chat into a comment or a list</li>
+<li>Chat transcript is a plain file — shareable, and it can scan another chat</li>
+<li class="mono" style="color:#8fb0e6">e.g. "make an HTML status report from this"</li>
+</ul></div>
+<div class="card"><h4 style="color:#facd1b">You stay the reviewer</h4><ul class="muted" style="font-size:14px">
+<li>Make it explain the problem — you see if it truly understands</li>
+<li><b>The more you challenge it, the more often a wrong fix gets caught</b></li>
+<li>Sometimes it insists it's right — repeat the instruction</li>
+<li class="mono" style="color:#8fb0e6">e.g. "explain the problem before you touch code"</li>
+</ul></div>
+<div class="card"><h4 style="color:#3d8bff">The payoff</h4><ul class="muted" style="font-size:14px">
+<li>Backlog triaged and drafted fixes overnight</li>
+<li>Consistent PRs the systems team can follow</li>
+<li>Nothing merges without a human — it's a fast first draft, not autopilot</li>
+</ul></div>
+</div>
+<div class="foot">Next: share the 4-week "training" chat so everyone starts from a working setup · write dev onboarding — what to clone, where, automate the rest.</div>
+</section>
+
+</div></body></html>
